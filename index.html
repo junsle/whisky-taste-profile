@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="위스키 취향 프로파일 — 평가 축, 점수 기록, 카테고리별 취향, 셀러 현황과 갭 분석">
+<meta name="theme-color" content="#14100c">
+<meta property="og:title" content="위스키 취향 프로파일 v4">
+<meta property="og:description" content="통합도·밀도·전개·피니시로 읽는 개인 위스키 취향 기록">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314100c'/%3E%3Cpath d='M10 7h12l-1.6 8.5a4.6 4.6 0 0 1-9 0z' fill='%23c08430'/%3E%3Crect x='14.6' y='19' width='2.8' height='5' fill='%23c08430'/%3E%3Crect x='11' y='23.5' width='10' height='2.2' rx='1.1' fill='%23c08430'/%3E%3C/svg%3E">
+<title>위스키 취향 프로파일 v4 — 하하호호</title>
+<style>
+  :root{
+    --bg:#14100c; --panel:#1d1813; --panel2:#241e17; --line:#3a3128;
+    --ink:#f0e8dc; --ink2:#b6a894; --ink3:#91846d;
+    --amber:#d99b3f;      /* text/accent token — 7.3:1 on panel */
+    --mark:#c08430;       /* chart mark — validated: L band, chroma, contrast all PASS (dark) */
+    --amber-soft:#8a6528;
+    --good:#7fa66a; --warn:#c4763f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",sans-serif;
+    line-height:1.65;-webkit-font-smoothing:antialiased;font-size:15px}
+  .wrap{max-width:900px;margin:0 auto;padding:48px 24px 96px}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:8px}
+  .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin:0 0 12px}
+  h1{font-size:31px;line-height:1.3;margin:0 0 14px;font-weight:650;letter-spacing:-.01em}
+  .meta{font-size:13px;color:var(--ink3);margin:0}
+  .thesis{margin-top:24px;padding:20px 22px;background:var(--panel);border-left:3px solid var(--amber);
+    border-radius:0 8px 8px 0;font-size:16px}
+  .thesis b{color:var(--amber);font-weight:600}
+
+  h2{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3);
+    margin:56px 0 18px;font-weight:600}
+  h2 span{color:var(--amber-soft);margin-right:10px}
+  h3{font-size:15.5px;margin:0 0 8px;font-weight:620;color:var(--ink)}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px 24px;margin-bottom:12px}
+  .card.tight{padding:18px 20px}
+  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:720px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+
+  .axis-t{font-size:16.5px;font-weight:640;color:var(--amber);margin:0 0 6px}
+  .axis-n{font-size:11px;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px}
+  p{margin:0 0 10px}
+  p:last-child{margin-bottom:0}
+  .sub{font-size:13.5px;color:var(--ink2)}
+  .note{font-size:12.5px;color:var(--ink3);margin:8px 0 0}
+
+  /* flow */
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+  .step{flex:1;min-width:150px;padding:16px 14px;background:var(--panel);border:1px solid var(--line);
+    border-right:none;position:relative}
+  .step:first-child{border-radius:10px 0 0 10px}
+  .step:last-child{border-right:1px solid var(--line);border-radius:0 10px 10px 0}
+  @media(max-width:720px){.step{border-right:1px solid var(--line);border-radius:10px!important;margin-bottom:8px}}
+  .step-n{font-size:10.5px;letter-spacing:.1em;color:var(--amber-soft);margin:0 0 6px;text-transform:uppercase}
+  .step-b{font-size:13.5px;color:var(--ink2);margin:0}
+  .step-b b{color:var(--ink);font-weight:580}
+
+  /* bands */
+  .band{display:flex;align-items:baseline;gap:14px;padding:9px 0;border-bottom:1px solid #2a231c;font-size:14px}
+  .band:last-child{border-bottom:none}
+  .band-r{font-variant-numeric:tabular-nums;font-weight:620;color:var(--ink);min-width:66px;font-size:14.5px}
+  .band-d{color:var(--ink2);font-size:13.5px}
+
+  /* dot plot */
+  .chart{margin-top:4px}
+  .scale{display:grid;grid-template-columns:215px 1fr 40px;gap:10px;align-items:end;
+    padding-bottom:6px;margin-bottom:8px;border-bottom:1px solid var(--line)}
+  .ticks{position:relative;height:16px}
+  .tick{position:absolute;transform:translateX(-50%);font-size:10.5px;color:var(--ink3);
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  .row{display:grid;grid-template-columns:215px 1fr 40px;gap:10px;align-items:center;
+    padding:3px 0;border-radius:5px;position:relative}
+  .row:hover{background:var(--panel2)}
+  .rname{font-size:12.8px;color:var(--ink2);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row:hover .rname{color:var(--ink)}
+  .track{position:relative;height:22px}
+  .gl{position:absolute;top:0;bottom:0;width:1px;background:#2a231c}
+  .gl.strong{background:#3a3128}
+  .dot{position:absolute;top:50%;width:10px;height:10px;border-radius:50%;background:var(--mark);
+    transform:translate(-50%,-50%);box-shadow:0 0 0 2px var(--panel)}
+  .row:hover .dot{box-shadow:0 0 0 2px var(--panel2),0 0 0 4px var(--amber-soft)}
+  .rval{font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink);text-align:right;font-weight:560}
+  .tip{position:absolute;left:0;right:0;top:100%;z-index:5;display:none;
+    background:#2b241c;border:1px solid var(--line);border-radius:7px;padding:9px 12px;
+    font-size:12.5px;color:var(--ink2);box-shadow:0 6px 20px rgba(0,0,0,.5)}
+  .row:hover .tip{display:block}
+  .tip b{color:var(--ink);font-weight:580}
+  @media(max-width:640px){
+    .scale,.row{grid-template-columns:132px 1fr 36px;gap:8px}
+    .rname{font-size:11.5px}
+    .tick.t77,.tick.t82{display:none}
+  }
+
+  /* cellar bars */
+  .brow{display:grid;grid-template-columns:215px 1fr 40px;gap:10px;align-items:center;padding:4px 0;border-radius:5px}
+  .brow:hover{background:var(--panel2)}
+  .bname{font-size:12.8px;color:var(--ink2);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .brow:hover .bname{color:var(--ink)}
+  .btrack{position:relative;height:11px}
+  .bfill{height:11px;background:var(--mark);border-radius:0 4px 4px 0}
+  .bval{font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink);text-align:right;font-weight:560}
+  .bax{display:grid;grid-template-columns:215px 1fr 40px;gap:10px;padding-bottom:6px;margin-bottom:8px;
+    border-bottom:1px solid var(--line)}
+  .baxin{position:relative;height:14px}
+  @media(max-width:640px){
+    .brow,.bax{grid-template-columns:132px 1fr 36px;gap:8px}
+    .bname{font-size:11.5px}
+  }
+
+  details{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-top:12px}
+  summary{padding:14px 22px;cursor:pointer;font-size:13.5px;color:var(--amber);list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";color:var(--amber-soft)}
+  details[open] summary::before{content:"▾ "}
+  details .inner{padding:0 22px 20px}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);
+    font-weight:600;padding:0 10px 9px 0;border-bottom:1px solid var(--line)}
+  td{padding:10px 10px 10px 0;border-bottom:1px solid #2a231c;vertical-align:top;color:var(--ink2)}
+  td.b{color:var(--ink);font-weight:550}
+  td.num{font-variant-numeric:tabular-nums;text-align:right;color:var(--ink);font-weight:600;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+
+  ul.f{list-style:none;padding:0;margin:0}
+  ul.f li{font-size:13.5px;color:var(--ink2);padding:5px 0 5px 16px;position:relative}
+  ul.f li::before{content:"";position:absolute;left:0;top:13px;width:5px;height:5px;border-radius:50%;background:var(--amber-soft)}
+  ul.f.no li::before{background:#5a4a42;border-radius:1px;width:6px;height:1.5px;top:15px}
+  ul.f.cond li::before{background:none;border:1px solid var(--amber-soft);width:5px;height:5px;top:12px}
+  ul.f li b{color:var(--ink);font-weight:560}
+
+  ol.rules{counter-reset:n;list-style:none;padding:0;margin:0}
+  ol.rules li{counter-increment:n;position:relative;padding:9px 0 9px 34px;font-size:13.8px;color:var(--ink2);
+    border-bottom:1px solid #2a231c}
+  ol.rules li:last-child{border-bottom:none}
+  ol.rules li::before{content:counter(n);position:absolute;left:0;top:11px;font-size:11px;color:var(--amber-soft);
+    font-variant-numeric:tabular-nums;width:20px;text-align:right}
+  ol.rules li b{color:var(--ink);font-weight:560}
+
+  .fmt{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .fmt span{font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:20px;color:var(--ink2)}
+
+  .verdict{display:inline-block;font-size:11px;padding:2px 9px;border-radius:4px;font-weight:600;white-space:nowrap}
+  .v-buy{background:rgba(127,166,106,.16);color:#96bd80}
+  .v-bar{background:rgba(217,155,63,.14);color:var(--amber)}
+  .v-hold{background:rgba(196,118,63,.14);color:#d68a55}
+
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Whisky Taste Profile · v4</p>
+  <h1>강도나 화려함보다 통합도와 밀도,<br>향에서 피니시까지의 자연스러운 흐름</h1>
+  <p class="meta">하하호호 · 2026년 7월 26일 · 본인 작성 프로필 + 셀러 118종 + 심층 인터뷰 반영</p>
+  <div class="thesis">
+    카테고리로 설명되지 않는 취향. 셰리 · 버번캐스크 · 피트 · 캠벨타운 · 버번/라이를 모두 즐기되,
+    어느 쪽이든 <b>알코올 통합도 · 맛의 밀도 · 중간 구간의 연결감 · 피니시의 질</b>이 충족되어야 점수가 올라감.
+    첫인상의 강렬함은 신뢰하지 않으며, <b>재시음에서도 구조가 유지되는가</b>로 최종 판단.
+  </div>
+  <div class="thesis" style="border-left-color:#8a5a4a;margin-top:10px;font-size:14.5px">
+    <b style="color:#c98a7a">읽을 때 주의</b> — 보유 118종은 취향의 증거가 아님. 스페이사이드 셰리 40종과 버번 24종은
+    <b style="color:#c98a7a">입문기 커뮤니티 할인 충동구매의 잔재</b>로 본인이 명시. 취향 추론은 <b style="color:#c98a7a">점수 기록 26병</b>으로만 할 것.
+    그 26병조차 “나쁘지 않은데” 싶을 때만 기록해온 <b style="color:#c98a7a">절단된 표본</b>이라 하한이 74점에서 끊겨 있음.
+  </div>
+</header>
+
+<h2><span>01</span>네 개의 평가 축</h2>
+<div class="grid4">
+  <div class="card tight"><p class="axis-n">Integration</p><p class="axis-t">통합도</p>
+    <p class="sub">알코올 · 원액 · 캐스크 · 단맛 · 피트가 따로 놀지 않고 하나로 어우러지는가.</p></div>
+  <div class="card tight"><p class="axis-n">Density</p><p class="axis-t">밀도</p>
+    <p class="sub">향만 화려한 것이 아니라 입안에서도 풍미와 질감이 유지되는가.</p></div>
+  <div class="card tight"><p class="axis-n">Development</p><p class="axis-t">전개와 연결감</p>
+    <p class="sub">첫맛 이후 중간이 비거나 늘어지지 않고 피니시까지 유기적으로 이어지는가.</p></div>
+  <div class="card tight"><p class="axis-n">Finish</p><p class="axis-t">피니시의 질</p>
+    <p class="sub">길기만 한 것이 아니라 견과 · 몰트 · 스파이스 · 정돈된 오크가 기분 좋게 남는가.</p></div>
+</div>
+
+<h2><span>02</span>이상적인 흐름</h2>
+<div class="flow">
+  <div class="step"><p class="step-n">Opening</p><p class="step-b"><b>꽃향 · 숙성 과실</b><br>은은하고 우아하게 열림</p></div>
+  <div class="step"><p class="step-n">Mid — 1</p><p class="step-b"><b>은은한 단맛 · 탄력 있는 질감</b><br>과하지 않은 꿀과 바닐라</p></div>
+  <div class="step"><p class="step-n">Mid — 2</p><p class="step-b"><b>몰트 · 스파이스 · 피트</b><br>복합적으로 전개, 평면 반복 없이</p></div>
+  <div class="step"><p class="step-n">Finish</p><p class="step-b"><b>견과류 · 정돈된 오크</b><br>길고 자연스럽게 남음</p></div>
+</div>
+<p class="note">복합미 = 향의 가짓수가 아니라 <strong style="color:var(--ink2)">시간에 따른 변화와 연결</strong>. 같은 맛이 평면적으로 반복되면 복합적이지 않음.</p>
+
+<h2><span>03</span>기억점의 조건</h2>
+<div class="card">
+  <p class="sub" style="margin-bottom:14px">“무난하고 기억점이 없다”가 가장 강한 감점 사유. 그 반대편에 놓인 것이 아래 셋이고, <strong style="color:var(--ink)">이 중 하나도 없으면 완성도가 높아도 80점을 넘기 어렵습니다.</strong></p>
+  <div class="grid3">
+    <div style="padding:16px 18px;background:var(--panel2);border-radius:8px">
+      <p class="axis-t" style="font-size:15px">예상 밖의 한 가지</p>
+      <p class="sub" style="margin:0">다른 술에서 못 본 향이나 맛이 하나 박혀 있을 때. 전체가 특이할 필요는 없고 한 지점이면 충분</p></div>
+    <div style="padding:16px 18px;background:var(--panel2);border-radius:8px">
+      <p class="axis-t" style="font-size:15px">마실수록 새 면이 나오는 것</p>
+      <p class="sub" style="margin:0">한 병을 비우는 동안 계속 다른 얼굴을 보여줌. 재시음 성향과 직결되는 항목</p></div>
+    <div style="padding:16px 18px;background:var(--panel2);border-radius:8px">
+      <p class="axis-t" style="font-size:15px">독보적인 질감</p>
+      <p class="sub" style="margin:0">맛이 아니라 입안에서의 감촉만으로 기억에 남는 경우. 왁시·오일리 선호와 같은 뿌리</p></div>
+  </div>
+  <p class="note">완성도가 높아도 이 셋이 없으면 “좋은데 기억에 안 남는 술”로 분류됨 — 스프링뱅크 18년 2026(80)이 정확히 그 사례.</p>
+</div>
+
+<h2><span>04</span>점수 체계</h2>
+<div class="card">
+  <div class="band"><span class="band-r">90+</span><span class="band-d">감동급. 장기간 기억에 남는 최고 수준</span></div>
+  <div class="band"><span class="band-r">85–89</span><span class="band-d">매우 훌륭하고 개성이 뚜렷함</span></div>
+  <div class="band"><span class="band-r">82–84</span><span class="band-d">확실히 좋은 상위권</span></div>
+  <div class="band"><span class="band-r">80–81</span><span class="band-d">완성도 높고 만족스러움 — <strong style="color:var(--amber)">낮은 점수가 아님</strong></span></div>
+  <div class="band"><span class="band-r">77–79</span><span class="band-d">장점은 분명하나 구조적 또는 취향상 아쉬움</span></div>
+  <div class="band"><span class="band-r">74–76</span><span class="band-d">마실 수는 있으나 병 구매를 적극 고려할 정도는 아님</span></div>
+  <div class="band"><span class="band-r">≤73</span><span class="band-d">취향과 맞지 않거나 단점이 크게 느껴짐</span></div>
+  <p class="note">가격 · 유명세 · 숙성 연수 · 희소성은 점수에 직접 반영하지 않음. 점수는 절대값이 아니라 재시음과 비교로 계속 보정되는 개인 기록.</p>
+</div>
+
+<h2><span>05</span>점수 기록 <span style="color:var(--ink3);letter-spacing:0;text-transform:none;font-weight:400">— 26병</span></h2>
+<div class="card">
+  <div class="chart" id="chart"></div>
+</div>
+<details>
+  <summary>표로 보기 (카테고리 · 메모 포함)</summary>
+  <div class="inner">
+    <table><thead><tr><th>병</th><th style="width:100px">축</th><th style="width:46px;text-align:right">점수</th><th style="width:34%">메모</th></tr></thead>
+    <tbody id="tbody"></tbody></table>
+  </div>
+</details>
+
+<h2><span>06</span>감점 트리거</h2>
+<div class="grid3">
+  <div class="card tight">
+    <h3>중간 맛이 비는 구성</h3>
+    <ul class="f no">
+      <li>첫맛은 좋지만 중간이 비어 있음</li>
+      <li>단맛이 사라진 뒤 다음 풍미까지 늘어짐</li>
+      <li>향은 진한데 입안 존재감이 약함</li>
+      <li>초반과 피니시가 분리된 느낌</li>
+      <li>시간이 지나도 같은 맛만 평면 반복</li>
+    </ul>
+  </div>
+  <div class="card tight">
+    <h3>알코올 통합 실패</h3>
+    <ul class="f no">
+      <li>알코올이 향보다 먼저 튐</li>
+      <li>도수가 질감을 확장하지 못함</li>
+      <li>원액·캐스크가 알코올에 가려짐</li>
+      <li>물을 넣어도 구조가 나아지지 않음</li>
+      <li>고도수가 어린 원액을 감추는 수단</li>
+    </ul>
+  </div>
+  <div class="card tight">
+    <h3>캐스크 과잉</h3>
+    <ul class="f no">
+      <li>캐스크 맛이 원액 개성을 덮음</li>
+      <li>와인·셰리·오크가 튀어나옴</li>
+      <li>숙성감이 색과 단맛으로만 드러남</li>
+      <li>후반의 과도한 떫은맛·쓴맛</li>
+      <li>연수 대비 깊이와 밀도 부족</li>
+    </ul>
+  </div>
+</div>
+<p class="note">캐스크가 <strong style="color:var(--ink2)">강한</strong> 술이 아니라 캐스크를 <strong style="color:var(--ink2)">잘 쓴</strong> 술을 선호. 숙성감은 색·단맛이 아니라 질감과 깊이로 드러나야 함.</p>
+
+<h2><span>07</span>향미 팔레트</h2>
+<div class="grid3">
+  <div class="card tight">
+    <h3 style="color:var(--amber)">선호</h3>
+    <ul class="f">
+      <li>은은하고 우아한 <b>꽃향</b></li>
+      <li>잘 익은 · 숙성 과실, 사과 배 복숭아</li>
+      <li>과하지 않은 꿀과 바닐라</li>
+      <li><b>몰트의 고소함</b></li>
+      <li>아몬드 헤이즐넛 호두 <b>견과류</b></li>
+      <li>혀를 <b>톡톡 치는 알코올 프리클</b><br><span style="font-size:12px;color:var(--ink3)">알코올이 강한 것과는 다름 — 통합된 고도수에서만 나오는 살아있는 자극</span></li>
+      <li>후추와 기분 좋은 스파이스</li>
+      <li><b>왁시 · 오일리한 질감</b></li>
+      <li>해풍 · 염분 · 바닷물</li>
+      <li>정돈된 오크</li>
+      <li>숙성으로 우아해진 메디시널 피트</li>
+      <li>길고 고소한 견과류 피니시</li>
+    </ul>
+  </div>
+  <div class="card tight">
+    <h3 style="color:var(--ink2)">조건부 <span style="font-size:12px;font-weight:400;color:var(--ink3)">— …할 때만</span></h3>
+    <ul class="f cond">
+      <li><b>PX 셰리</b> — 단맛 외 깊이와 구조가 있을 때</li>
+      <li><b>고도수</b> — 알코올이 잘 통합됐을 때</li>
+      <li><b>강한 피트</b> — 과실·몰트·숙성감이 함께일 때</li>
+      <li><b>드라이함</b> — 견과·몰트·오크의 고소함이 동반될 때</li>
+      <li><b>캠벨타운 펑크</b> — 쇠 맛과 거친 알코올로 넘어가지 않을 때</li>
+      <li><b>와인 캐스크</b> — 신맛·떫은맛·와인향이 튀지 않을 때</li>
+      <li><b>고숙성 오크</b> — 쓴맛·탄닌보다 과실과 질감이 살아 있을 때</li>
+    </ul>
+  </div>
+  <div class="card tight">
+    <h3 style="color:#c98a7a">비선호</h3>
+    <ul class="f no">
+      <li>끈적하고 답답한 단맛</li>
+      <li>과도한 황 · 고무 계열 셰리</li>
+      <li><b>쇠 맛 · 금속성 풍미</b></li>
+      <li>거친 메디시널 향</li>
+      <li>날카롭게 튀는 알코올</li>
+      <li>중간 맛이 얇거나 빈 구성</li>
+      <li>단맛 이후 피니시까지 늘어짐</li>
+      <li>캐스크가 원액을 덮은 술</li>
+      <li>후반부 과도한 떫은맛 · 쓴맛</li>
+      <li>피트와 단맛이 지나치게 농축된 스타일</li>
+      <li>연수 대비 깊이·밀도 부족</li>
+      <li><b>무난하지만 기억점 없는 술</b></li>
+    </ul>
+  </div>
+</div>
+
+<h2><span>08</span>카테고리별 취향</h2>
+
+<div class="card">
+  <h3>셰리 — 결이 아니라 피니시가 기준</h3>
+  <p class="sub" style="padding:12px 14px;background:var(--panel2);border-radius:8px;margin-bottom:12px">
+    <strong style="color:var(--amber)">확정</strong> — 드라이 셰리(피노·아몬티야도)와 진한 셰리(올로로소·PX) 사이에 선호가 없음.
+    스프링뱅크 10년 피노와 글렌드로낙 30년 PX를 모두 좋게 든 이유가 여기 있음.
+    <strong style="color:var(--ink)">어느 쪽이든 고소한 견과 피니시로 끝나면 통과</strong>, 그렇지 않으면 결과 무관하게 감점.</p>
+  <p class="sub">‘셰리 폭탄’을 무조건 선호하지 않음. 건과일과 견과류가 조화를 이루고, 입안에 탄산감이 살아 있으며, 단맛 뒤에 <strong style="color:var(--ink)">고소한 견과류 피니시</strong>가 이어지는 스타일. 캐스크와 몰트 원액이 <em>둘 다</em> 느껴져야 함. PX라도 단맛만이 아니라 숙성감과 입체감이 있으면 통과 (글렌드로낙 PX 30년 · 87점).</p>
+  <p class="note" style="border-top:1px solid #2a231c;padding-top:10px;margin-top:12px">
+    <strong style="color:var(--ink2)">대표 비교</strong> · 탐두 18년 &gt; 맥캘란 15년 더블캐스크 — 탐두 쪽이 더 선명하고 탄산감·스파이스·견과 피니시가 살아 있음. 맥캘란 15는 안정적이나 평면적.<br>
+    로얄 브라클라 21년 &gt; 12년 &gt; 18년 — 21년은 완성도와 긴 견과 피니시, 12년은 짧지만 기분 좋은 너티함, 18년은 드라이함과 스파이스가 취향에서 벗어남.
+  </p>
+</div>
+
+<div class="card">
+  <h3>버번 캐스크 몰트 — 섬세함은 밀도의 면죄부가 아님</h3>
+  <p class="sub">꽃향 · 몰트 · 꿀 · 바닐라 · 견과류가 선명한 스타일 선호. 다만 <strong style="color:var(--ink)">섬세하다는 이유로 가볍거나 중간이 비면 감점</strong>. 밝고 화사해도 일정 수준 이상의 밀도와 구조가 필요.<br>고숙성 버번 캐스크에는 숙성 과실 · 왁시함 · 벌꿀 · 몰트 · 견과 · 정돈된 오크 · 길고 자연스러운 여운 · 높은 알코올·나무 통합도를 기대.</p>
+</div>
+
+<div class="card">
+  <h3>피트 — 강도가 아니라 질과 표현 방식</h3>
+  <div class="grid2" style="margin-top:12px">
+    <div><p class="axis-n" style="color:var(--amber-soft)">선호</p>
+      <ul class="f">
+        <li>탈리스커 계열 해풍 · 염분 · 후추 · 과실</li>
+        <li>숙성으로 우아하게 정리된 메디시널 피트</li>
+        <li>피트가 과실과 몰트를 가리지 않는 구성</li>
+        <li>피트 · 단맛 · 알코올의 자연스러운 통합</li>
+        <li>강하지만 품위와 깊이가 있는 피트</li>
+      </ul></div>
+    <div><p class="axis-n" style="color:#8a5a4a">비선호</p>
+      <ul class="f no">
+        <li>어린 원액의 거친 알코올 + 메디시널이 동시에 튐</li>
+        <li>단맛과 피트가 과도하게 농축되어 답답함</li>
+        <li>쇠 맛 · 금속성이 강한 저숙성 고도수 피트</li>
+        <li>강도만 강조되고 과실·몰트가 부족</li>
+      </ul></div>
+  </div>
+  <p class="note" style="border-top:1px solid #2a231c;padding-top:10px;margin-top:12px">
+    라프로익 25 CS <strong style="color:var(--ink)">91</strong> — 메디시널 피트가 거칠지 않고 우아하게 정돈, 통합도 최상 &nbsp;·&nbsp;
+    탈리스커 18 <strong style="color:var(--ink)">82</strong> — 해풍·후추·과실의 조화 &nbsp;·&nbsp;
+    라프로익 10 CS Batch 15 <strong style="color:#c98a7a">비선호</strong> — 메디시널과 알코올이 거칠게 튐 &nbsp;·&nbsp;
+    킬호만 로크 곰 <strong style="color:#c98a7a">비선호</strong> — 피트와 단맛이 지나치게 농밀
+  </p>
+</div>
+
+<div class="card">
+  <h3>캠벨타운 — 지역 프리미엄은 없음</h3>
+  <p class="sub">몰트의 고소함, 오일리하고 탄력 있는 질감, 적절한 피트와 염분, 과실·스파이스·펑키함의 조화를 좋아함. 저숙성이라도 원액의 힘과 밀도가 느껴지면 인정. 다만 <strong style="color:var(--ink)">캠벨타운이라는 이유만으로 점수를 주지 않음</strong> — 실제 기록은 모두 80–81점대.</p>
+  <p class="note" style="border-top:1px solid #2a231c;padding-top:10px;margin-top:12px">
+    스프링뱅크 18년 2026 — 통합은 좋았으나 개성이 기대보다 약함. 완성도는 높으나 10년 피노·로컬발리만큼 기억에 남지 않음.<br>
+    롱로우 100 Proof — 쇠 맛과 거친 질감으로 <strong style="color:#c98a7a">비선호</strong>. 같은 저숙성 고도수라면 스프링뱅크 5년 100 Proof 쪽이 나았음.<br>
+    글렌스코샤 빅토리아나 — 나쁘지 않으나 병 구매할 만큼은 아님. <strong style="color:#c98a7a">기본 추천에서 제외</strong>.
+  </p>
+</div>
+
+<div class="card">
+  <h3>고숙성 — 숫자가 아니라 실제로 느껴져야 함</h3>
+  <div class="grid2" style="margin-top:12px">
+    <div><p class="axis-n" style="color:var(--amber-soft)">기대하는 것</p>
+      <ul class="f"><li>시간에서 오는 깊이</li><li>부드럽지만 얇지 않은 질감</li>
+      <li>왁스 · 숙성 과실 · 몰트 · 오래된 오크의 조화</li><li>알코올의 안정감</li>
+      <li>젊은 위스키에서 나오기 어려운 복합적 변화</li><li>길고 자연스러운 피니시</li></ul></div>
+    <div><p class="axis-n" style="color:#8a5a4a">그럼에도 감점</p>
+      <ul class="f no"><li>알코올과 날 선 버번 캐스크가 먼저 튐</li><li>연수 대비 질감이 얇음</li>
+      <li>오크가 원액 개성을 지움</li><li>향은 좋으나 맛의 존재감이 약함</li></ul></div>
+  </div>
+  <p class="note" style="border-top:1px solid #2a231c;padding-top:10px;margin-top:12px">
+    Hidden Spirits Burnside 36년 <strong style="color:var(--ink)">75</strong> — 향은 좋았으나 알코올과 날 선 버번 캐스크가 먼저. 36년에 기대한 깊이와 존재감 부족. 시간이 지나며 호감도는 상승.
+  </p>
+</div>
+
+<div class="card">
+  <h3>버번 · 라이 — 도수보다 향의 선명도와 후반 밸런스</h3>
+  <p class="sub">바나나 · 체리 · 바닐라처럼 분명한 향, 오일리하거나 끈적한 질감, 라이의 허브·스파이스, 고도수에서도 무너지지 않는 구조, 후반까지 기분 좋게 이어지는 단맛. 지나친 오크 · 탄닌 · 후반 쓴맛 · 인공적 단맛은 비선호.</p>
+  <p class="note" style="border-top:1px solid #2a231c;padding-top:10px;margin-top:12px">
+    <strong style="color:var(--ink2)">좋았음</strong> · 잭다니엘 싱글배럴 배럴프루프(바나나 향) · 윌렛 라이(허브·독특한 캐릭터) · 부커스 2025(3종 비교 중 1위) · 메이커스 마크 CS 2025(콜라 믹스에서 특히) · 믹터스 보머거스 2025 <strong style="color:var(--ink)">81</strong><br>
+    <strong style="color:var(--ink2)">감흥 적었음</strong> · 믹터스 10년 라이(완성도와 별개로 감흥 없음) · 메이커스 마크 셀러 에이지드 2025(후반부가 취향과 불일치)
+  </p>
+</div>
+
+<h2><span>09</span>평가 방식과 신뢰 조건</h2>
+<div class="grid2">
+  <div class="card tight">
+    <h3 style="color:var(--amber)">점수를 신뢰하는 조건</h3>
+    <ul class="f">
+      <li><b>바 또는 집에서 혼자 마실 때</b> — 집중해서 볼 수 있는 상태</li>
+      <li><b>다른 병과 비교 시음할 때</b> — 나란히 놓으면 특징이 훨씬 선명해짐</li>
+      <li>개봉 후 시간이 지나 안정된 병</li>
+    </ul>
+  </div>
+  <div class="card tight">
+    <h3 style="color:#c98a7a">기록에 있는 편향</h3>
+    <ul class="f no">
+      <li>“나쁘지 않은데” 싶을 때만 점수를 매겨옴 → <b>하한이 74에서 끊김</b></li>
+      <li>비선호로 명시한 병(라프로익 10 CS·롱로우 100 Proof·킬호만 로크 곰)은 점수 자체가 없음</li>
+      <li>라프로익 10 CS는 본인이 “너무 낮게 본 것 같다”며 재평가 의사 표시</li>
+      <li><b>개선안</b> — 안 맞은 술도 점수를 남기면 하한이 생기고 상대 비교가 정확해짐</li>
+    </ul>
+  </div>
+</div>
+<div class="card">
+  <p class="sub">개봉 직후 첫 잔만으로 확정하지 않음. 다음은 반드시 시간을 두고 재평가: <strong style="color:var(--ink)">고도수 · 캐스크 스트렝스 · 첫 잔에서 알코올이 거칠었던 것 · 향과 맛이 닫혀 있는 것 · 물 몇 방울로 구조가 달라지는 것.</strong></p>
+  <div class="grid3" style="margin-top:14px">
+    <div style="padding:12px 14px;background:var(--panel2);border-radius:8px">
+      <p style="font-size:12.5px;color:var(--good);margin:0 0 4px">상향 ↑</p>
+      <p class="sub" style="font-size:13px;margin:0">믹터스 보머거스 2025<br><span style="color:var(--ink3);font-size:12px">78 → 81 · 재시음에서 훨씬 좋아짐</span></p></div>
+    <div style="padding:12px 14px;background:var(--panel2);border-radius:8px">
+      <p style="font-size:12.5px;color:var(--warn);margin:0 0 4px">하향 ↓</p>
+      <p class="sub" style="font-size:13px;margin:0">옥토모어 16.2<br><span style="color:var(--ink3);font-size:12px">첫인상은 강했으나 재고 후 80으로 조정</span></p></div>
+    <div style="padding:12px 14px;background:var(--panel2);border-radius:8px">
+      <p style="font-size:12.5px;color:var(--ink2);margin:0 0 4px">가수 효과</p>
+      <p class="sub" style="font-size:13px;margin:0">맥캘란 12년 110 Proof<br><span style="color:var(--ink3);font-size:12px">물 2–3방울로 밸런스 개선</span></p></div>
+  </div>
+</div>
+
+<h2><span>10</span>구매 결정 규칙</h2>
+<div class="card">
+  <p class="sub" style="margin-bottom:16px">점수와 별개로 작동하는 실제 구매 규칙. 추천의 <strong style="color:var(--ink)">결론</strong>은 이 규칙으로 정합니다.</p>
+  <table>
+    <thead><tr><th style="width:130px">가격</th><th style="width:110px">기본 결론</th><th>조건</th></tr></thead>
+    <tbody>
+      <tr><td class="b">100만 원 이하</td><td><span class="verdict v-buy">즉시 구매</span></td>
+        <td>맛있을 것으로 판단되고 <strong style="color:var(--ink)">가격에 거품이 없으면</strong> 바로 산다. 이 구간에서는 망설임이 크지 않음</td></tr>
+      <tr><td class="b">100만 원 초과</td><td><span class="verdict v-hold">가격 대기</span></td>
+        <td>이 구간은 거품이 낀 경우가 많아 <strong style="color:var(--ink)">시세가 안정될 때까지 기다린다</strong>. 라프로익 25 CS(91)·글렌드로낙 30(87)이 현재 이 상태</td></tr>
+      <tr><td class="b">— 예외</td><td><span class="verdict v-buy">그냥 구매</span></td>
+        <td>가격과 무관하게 <strong style="color:var(--amber)">“진짜 마시고 싶다”</strong>는 판단이 서면 그냥 산다</td></tr>
+    </tbody>
+  </table>
+  <p class="note">따라서 추천에는 <strong style="color:var(--ink2)">거품 판정</strong>이 반드시 포함돼야 함 — 국내가가 해외·일본 시세 대비 정상인지, 최근 가격이 오르는 중인지 내리는 중인지.</p>
+</div>
+
+<h2><span>11</span>추천 시 지켜야 할 규칙</h2>
+<div class="card">
+  <ol class="rules">
+    <li><b>정확한 제품명 · 출시 연도 · 배치 · 도수</b>를 구분할 것</li>
+    <li>같은 이름이라도 캐스크 구성과 배치가 다르면 <b>별개 제품</b>으로 볼 것</li>
+    <li>시장 인기보다 <b>취향 적합성</b>을 우선할 것</li>
+    <li>향보다 <b>맛의 밀도와 중간 전개</b>를 중요하게 볼 것</li>
+    <li><b>알코올과 캐스크의 통합도</b>를 확인할 것</li>
+    <li>피니시가 자연스럽고 고소하게 이어지는지 확인할 것</li>
+    <li>실제 시음자들이 <b>“얇다 · 중간이 빈다 · 알코올이 튄다 · 오크가 과하다 · 지나치게 달다 · 금속성이 있다”</b>고 평가하는지 확인할 것</li>
+    <li>비싸거나 희소하다는 이유만으로 구매를 권하지 말 것</li>
+    <li><b>바에서 한 잔이면 충분한 술인지, 병으로 보유할 가치가 있는지</b> 구분할 것</li>
+    <li>이미 보유한 병과 중복되는지 고려할 것</li>
+    <li>가능하면 <b>국내가 · 해외/일본 시세</b>를 비교할 것</li>
+    <li>Whiskybase 점수는 <b>평가 수와 함께</b> 제시할 것</li>
+  </ol>
+</div>
+
+<div class="card">
+  <h3 style="margin-bottom:12px">추천 결과 제시 형식</h3>
+  <div class="fmt">
+    <span>정확한 제품명 · 배치</span><span>도수</span><span>캐스크 구성</span><span>주요 향미</span>
+    <span>질감과 중간 전개</span><span>알코올 통합도</span><span>해외 실구매자 공통 평가</span>
+    <span>Whiskybase 점수 + 평가 수</span><span>국내가</span><span>해외 · 일본가</span>
+    <span>취향 적합 가능성</span><span>예상 개인 점수 범위</span>
+  </div>
+  <p class="note">결론은 셋 중 하나로 명시 —
+    <span class="verdict v-buy">병 구매</span>
+    <span class="verdict v-bar">바 시음</span>
+    <span class="verdict v-hold">구매 보류</span>
+  </p>
+</div>
+
+<div class="card">
+  <h3 style="margin-bottom:10px">참고하는 정보원</h3>
+  <p class="sub" style="margin-bottom:12px">네 채널을 모두 활용하므로, 추천 근거는 <strong style="color:var(--ink)">한 곳이 아니라 교차로</strong> 제시할 것.</p>
+  <div class="grid4">
+    <div style="padding:14px;background:var(--panel2);border-radius:8px"><p class="axis-n" style="margin:0 0 4px">Primary</p><p class="sub" style="margin:0"><b style="color:var(--ink)">Whiskybase</b><br>점수 + 평가 수 함께</p></div>
+    <div style="padding:14px;background:var(--panel2);border-radius:8px"><p class="axis-n" style="margin:0 0 4px">Domestic</p><p class="sub" style="margin:0"><b style="color:var(--ink)">국내 커뮤니티</b><br>오픈카톡방 · 시세와 입고 정보</p></div>
+    <div style="padding:14px;background:var(--panel2);border-radius:8px"><p class="axis-n" style="margin:0 0 4px">Trade</p><p class="sub" style="margin:0"><b style="color:var(--ink)">바텐더 · 보틀샵</b><br>직접 마셔본 사람의 의견</p></div>
+    <div style="padding:14px;background:var(--panel2);border-radius:8px"><p class="axis-n" style="margin:0 0 4px">Overseas</p><p class="sub" style="margin:0"><b style="color:var(--ink)">해외 리뷰 · 유튜브</b><br>상세 테이스팅 노트</p></div>
+  </div>
+</div>
+
+<h2><span>12</span>적합 / 부적합 신호</h2>
+<div class="grid2">
+  <div class="card tight">
+    <h3 style="color:var(--amber)">잘 맞을 가능성이 높음</h3>
+    <ul class="f">
+      <li>우아하게 숙성된 아일라 피트</li>
+      <li>탈리스커형 해풍 · 후추 · 과실 중심 피트</li>
+      <li>몰트와 질감이 풍부한 캠벨타운</li>
+      <li>견과류 피니시가 선명한 셰리</li>
+      <li>꽃향 · 꿀 · 몰트 · 견과가 조화로운 버번 캐스크 몰트</li>
+      <li>고숙성이 실제 질감과 깊이로 드러나는 술</li>
+      <li>고도수에서도 알코올이 잘 통합된 CS</li>
+      <li>과하게 달지 않으면서 생동감과 탄산감이 있는 술</li>
+      <li>독립병입의 개성 + 캐스크가 원액을 덮지 않는 병</li>
+      <li>첫맛부터 피니시까지 흐름이 끊기지 않는 술</li>
+    </ul>
+  </div>
+  <div class="card tight">
+    <h3 style="color:#c98a7a">맞지 않을 가능성이 높음</h3>
+    <ul class="f no">
+      <li>어린 원액의 거친 알코올을 고도수로 밀어붙이는 술</li>
+      <li>쇠 맛 · 금속성 펑크가 강한 캠벨타운 · 피트</li>
+      <li>단맛과 피트가 지나치게 농축된 술</li>
+      <li>향은 강하지만 맛이 얇고 중간이 비는 술</li>
+      <li>캐스크 맛만 과도하게 강한 셰리</li>
+      <li>오크와 탄닌이 지나치게 강한 고숙성</li>
+      <li>유명세·희소성 대비 원액의 밀도가 부족한 술</li>
+      <li>화려하게 시작해 피니시에서 쓰거나 떫어지는 술</li>
+      <li>지나치게 무난하고 기억점이 없는 프리미엄</li>
+    </ul>
+  </div>
+</div>
+
+<h2><span>13</span>셀러 현황 <span style="color:var(--ink3);letter-spacing:0;text-transform:none;font-weight:400">— 118종 / 119병 · 2026.07.26</span></h2>
+<div class="card">
+  <div id="cellar"></div>
+  <p class="note">독립병입 4종은 목록상 분류 기준. 실제로는 Silver Seal Caol Ila · G&amp;M Caol Ila 2003이 피트 항목에 섞여 있어 <strong style="color:var(--ink2)">실질 6종</strong>.</p>
+</div>
+
+<div class="card">
+  <h3 style="margin-bottom:14px">보유량과 실제 점수의 대조</h3>
+  <table>
+    <thead><tr><th style="width:32%">축</th><th style="width:56px;text-align:right">보유</th><th style="width:56px;text-align:right">채점</th><th style="width:56px;text-align:right">최고점</th><th>판단</th></tr></thead>
+    <tbody>
+      <tr><td class="b">독립병입 단일캐스크</td><td class="num">6</td><td class="num">3</td><td class="num" style="color:var(--amber)">92</td><td>적합도 최상인데 보유 비중 5%. <strong style="color:var(--ink)">확대할 유일한 축</strong></td></tr>
+      <tr><td class="b">피트 · 18년 이상</td><td class="num">7</td><td class="num">4</td><td class="num" style="color:var(--amber)">91</td><td>적합. 다만 91점을 준 라프로익의 고숙성이 선반에 없음</td></tr>
+      <tr><td class="b">하이랜드·스페이사이드 공식 셰리</td><td class="num">40</td><td class="num">9</td><td class="num">80</td><td>최다 보유, 최저 천장. 9병 모두 77~80에 수렴 — <strong style="color:#c98a7a">추가 매입 중단</strong></td></tr>
+      <tr><td class="b">미국 버번 · 라이</td><td class="num">24</td><td class="num">1</td><td class="num">81</td><td>전체의 20%인데 채점은 1병. 취향 코어 밖 + 검증 부족</td></tr>
+      <tr><td class="b">캠벨타운</td><td class="num">7</td><td class="num">4</td><td class="num">81</td><td>충분. 천장 81 확인 — 종을 늘릴 이유 없음</td></tr>
+      <tr><td class="b">저숙성 고도수 피트</td><td class="num">5</td><td class="num">2</td><td class="num">80</td><td>비선호 사유(거친 알코올·농축 피트)와 정면 충돌 — <strong style="color:#c98a7a">중단</strong></td></tr>
+      <tr><td class="b">일본</td><td class="num">10</td><td class="num">1</td><td class="num">84</td><td>이치로 84점 외 미검증. 인디·치치부 미탐색</td></tr>
+      <tr><td class="b">왁시 (클라이넬리시 계열)</td><td class="num">1</td><td class="num">0</td><td class="num">—</td><td>“왁시·오일리 질감”은 명시 선호인데 14년 1종뿐. <strong style="color:var(--ink)">사각지대</strong></td></tr>
+    </tbody>
+  </table>
+  <p class="note">채점 = 점수 기록이 있는 병 수. 축 분류는 취향 축 기준이라 목록의 지역 분류와 다름.</p>
+</div>
+
+<h2><span>14</span>갭 분석</h2>
+<div class="card" style="border-left:3px solid #8a5a4a">
+  <p class="sub" style="margin:0"><strong style="color:#c98a7a">전제</strong> — 아래 “더 사면 안 되는 칸”의 과잉은 취향의 결과가 아니라 <strong style="color:var(--ink)">이력의 결과</strong>입니다.
+  스페이사이드 셰리 40종과 버번 24종은 입문기에 커뮤니티 할인 소식을 보고 맛보기 전에 사둔 것들이고, 버번은 절반이 아직 미개봉입니다.
+  즉 이 축들은 <strong style="color:var(--ink)">싫어서 낮은 게 아니라 검증 없이 쌓인 것</strong>이며, 추가 매입 중단의 이유도 “취향과 안 맞아서”가 아니라 “이미 검증할 물량이 넘쳐서”입니다.</p>
+</div>
+<div class="grid2">
+  <div class="card tight">
+    <h3 style="color:var(--amber)">진짜 비어 있는 칸</h3>
+    <ul class="f">
+      <li><b>독립병입 셰리 고숙성 단일캐스크</b><br><span style="font-size:12.5px;color:var(--ink3)">92점(SMWS 25년)과 87점(글렌드로낙 PX 30년)이 만나는 자리. 118종 중 6종뿐 — 가장 큰 불균형</span></li>
+      <li><b>라프로익 · 라가불린 고숙성</b><br><span style="font-size:12.5px;color:var(--ink3)">라프로익 25 CS에 91점을 줬는데 보유 3종은 PX Cask · 10 CS(비선호) · 14년. 라가불린은 DE 하나</span></li>
+      <li><b>헤이즐번</b><br><span style="font-size:12.5px;color:var(--ink3)">스프링뱅크 사 3라인 중 유일한 공백. 논피트 · 오일리 · 셰리 견과 피니시로 취향 코어에 정면 대응</span></li>
+      <li><b>클라이넬리시 고숙성 · 독립병입</b><br><span style="font-size:12.5px;color:var(--ink3)">명시 선호인 왁시 축의 유일한 병이 14년 하나. 인디 20년대가 이 축의 상단을 열어줄 자리</span></li>
+      <li><b>25년 이상 스카치</b><br><span style="font-size:12.5px;color:var(--ink3)">최고점 3병이 25 · 25 · 30년인데 보유는 SMWS 25 · 글렌고인 25 둘뿐. 21년대는 6종으로 충분</span></li>
+    </ul>
+  </div>
+  <div class="card tight">
+    <h3 style="color:#c98a7a">더 사면 안 되는 칸</h3>
+    <ul class="f no">
+      <li><b>스페이사이드·하이랜드 공식 셰리 12~18년</b><br><span style="font-size:12.5px;color:var(--ink3)">40종 보유, 채점 9병 전부 77~80. 글렌알라키 6종 · 글렌드로낙 4종 · 글렌고인 4종 · 맥캘란 3종 · 달모어 3종은 이미 과잉</span></li>
+      <li><b>저숙성 고도수 피트</b><br><span style="font-size:12.5px;color:var(--ink3)">옥토모어 2종 · 라프로익 10 CS(비선호) · 킬커란 HP CS · 글렌터렛 14 피트. 킬호만 로크 곰 비선호 사유가 그대로 적용</span></li>
+      <li><b>버번 · 라이</b><br><span style="font-size:12.5px;color:var(--ink3)">24종은 취향 코어 대비 과대 배분. 채점 1병(81) — 늘리기 전에 있는 것부터 검증</span></li>
+      <li><b>스프링뱅크 · 킬커란 추가</b><br><span style="font-size:12.5px;color:var(--ink3)">7종 보유, 채점 4병 모두 80~81. 캠벨타운 천장이 확인된 이상 종 확대의 실익 없음</span></li>
+      <li><b>NAS 프리미엄 · 블렌디드</b><br><span style="font-size:12.5px;color:var(--ink3)">“무난하고 기억점 없음” 감점 사유에 가장 잘 걸리는 범주</span></li>
+    </ul>
+  </div>
+</div>
+
+<div class="card">
+  <h3>사기 전에 열어야 할 병 <span style="font-size:13px;font-weight:400;color:var(--ink3)">— 보유 중이며 아직 점수가 없는 것</span></h3>
+  <p class="sub" style="margin-bottom:12px">위 갭 중 셋은 새로 사지 않아도 선반에서 먼저 검증됩니다. 이 병들을 채점하면 프로필의 빈칸이 상당 부분 메워집니다.</p>
+  <table>
+    <thead><tr><th style="width:40%">병</th><th>이 병으로 확인되는 것</th></tr></thead>
+    <tbody>
+      <tr><td class="b">Cadenhead’s Enigma Speyside 12 SPY.4.A<br><span style="font-weight:400;font-size:12px;color:var(--ink3)">50% · Oloroso Hogsheads · 2013–2026</span></td>
+        <td>독립병입 셰리 가설의 저숙성 대조군. 92·87점이 숙성 덕인지 캐스크·병입 방식 덕인지 갈림</td></tr>
+      <tr><td class="b">Club Qing Monochrome Essence 12<br><span style="font-weight:400;font-size:12px;color:var(--ink3)">46.5% · Highland Distilleries · 2nd Fill PX Quarter Cask</span></td>
+        <td>개인 최고점 SMWS 4.396과 <strong style="color:var(--ink)">같은 증류소 원액</strong>. 하이랜드파크가 취향의 정점인지 확인하는 가장 직접적인 병</td></tr>
+      <tr><td class="b">Royal Brackla 21 Year Old</td>
+        <td>본인이 12년·18년보다 최상으로 지목했으나 점수 미기재. 셰리 축 상단의 기준선</td></tr>
+      <tr><td class="b">Tamdhu 18 Year Old</td>
+        <td>맥캘란 15 더블캐스크(80)보다 높다고만 기록됨. 셰리 공식병입의 실제 천장을 확정</td></tr>
+      <tr><td class="b">Clynelish 14 Year Old</td>
+        <td>왁시 축의 유일한 병. 이 축을 확대할지 말지가 여기서 결정됨</td></tr>
+      <tr><td class="b">Silver Seal Caol Ila 2009 15 Year Old<br><span style="font-weight:400;font-size:12px;color:var(--ink3)">52.8% · Cask #2101024</span></td>
+        <td>독립병입 × 피트 × 중숙성. 고숙성이 아니어도 인디가 통하는지 검증</td></tr>
+      <tr><td class="b">Highland Park Seoul Edition #3 19 CS</td>
+        <td>고숙성 하이랜드파크 CS. Club Qing과 함께 보면 증류소 적합도가 명확해짐</td></tr>
+      <tr><td class="b">Glendronach 21 Parliament 구형 vs 신형</td>
+        <td>같은 이름 다른 제품 — 추천 규칙 2번을 본인 셀러에서 직접 검증할 수 있는 유일한 페어</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2><span>15</span>셀러 운영 계획</h2>
+<div class="card">
+  <h3 style="margin-bottom:14px">숫자로 본 현재 상태</h3>
+  <div class="grid4">
+    <div style="padding:16px;background:var(--panel2);border-radius:8px">
+      <p class="axis-n" style="margin:0 0 6px">연간 소진</p>
+      <p style="font-size:26px;font-weight:640;color:var(--amber);margin:0;line-height:1.2">약 6병</p>
+      <p class="sub" style="font-size:12px;margin:4px 0 0">주 1~2회 × 1~2잔 기준</p></div>
+    <div style="padding:16px;background:var(--panel2);border-radius:8px">
+      <p class="axis-n" style="margin:0 0 6px">개봉 병</p>
+      <p style="font-size:26px;font-weight:640;color:var(--ink);margin:0;line-height:1.2">약 59병</p>
+      <p class="sub" style="font-size:12px;margin:4px 0 0">전체의 절반</p></div>
+    <div style="padding:16px;background:var(--panel2);border-radius:8px">
+      <p class="axis-n" style="margin:0 0 6px">개봉분 소진</p>
+      <p style="font-size:26px;font-weight:640;color:var(--warn);margin:0;line-height:1.2">약 5년</p>
+      <p class="sub" style="font-size:12px;margin:4px 0 0">잔량 절반 가정</p></div>
+    <div style="padding:16px;background:var(--panel2);border-radius:8px">
+      <p class="axis-n" style="margin:0 0 6px">전량 소진</p>
+      <p style="font-size:26px;font-weight:640;color:var(--warn);margin:0;line-height:1.2">약 15년</p>
+      <p class="sub" style="font-size:12px;margin:4px 0 0">신규 구매 0 가정</p></div>
+  </div>
+  <p class="note">산화 우려는 근거가 있습니다. 개봉 병 59개는 현재 소비 속도로 <strong style="color:var(--ink2)">10년치 재고</strong>이고, 잔량이 적은 병일수록 병 안의 공기가 많아 변화 속도가 빨라집니다.</p>
+</div>
+
+<div class="grid3">
+  <div class="card tight">
+    <h3 style="color:var(--amber)">소분 보관</h3>
+    <p class="sub">잔량 <strong style="color:var(--ink)">1/3 이하</strong>인 병을 100~200ml 샘플병으로 옮겨 공기층을 줄임. 특히 점수를 높게 준 병과 재시음 예정 병부터.</p>
+    <p class="note">라벨에 이전 날짜를 적어두면 재시음 시 변화 판단이 가능</p>
+  </div>
+  <div class="card tight">
+    <h3 style="color:var(--amber)">동시 개봉 상한</h3>
+    <p class="sub">연 6병 소진 기준이면 개봉 병 <strong style="color:var(--ink)">12~15병이 2년치</strong>. 현재 59병은 10년치이므로, 새 병은 열려 있는 병 하나를 비운 뒤 여는 방식으로 전환.</p>
+    <p class="note">비교 시음 습관을 살리려면 축별로 2~3병씩 묶어 열고 그 묶음을 끝낸 뒤 다음으로</p>
+  </div>
+  <div class="card tight">
+    <h3 style="color:var(--amber)">모임·선물 배정</h3>
+    <p class="sub">입문기 충동구매분(스페이사이드 셰리 80점대 · 미개봉 버번)을 <strong style="color:var(--ink)">우선 배정</strong>. 취향 코어 병은 혼자 마시는 자리에 남겨 평가 신뢰 조건을 지킴.</p>
+    <p class="note">본인 방침 — 모임·선물로 돌리되 천천히 소진하며 점수는 채운다</p>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-bottom:12px">셀러 목표</h3>
+  <p class="sub">수는 줄이고 질을 올린다 · 독립병입 비중을 높인다 · 미탐색 영역을 넓힌다 · 다만 <strong style="color:var(--ink)">마시는 재미가 우선이고 구성 자체를 관리 대상으로 삼지는 않는다</strong>.</p>
+  <p class="note">→ 실행 우선순위: ① 재고 소진과 채점 ② 독립병입 신규 매입 ③ 미탐색 영역(헤이즐번·르데이그·치치부) ④ 100만 원 초과 위시리스트 가격 대기</p>
+</div>
+
+<h2><span>16</span>추천 제외 목록</h2>
+<div class="card">
+  <p class="sub" style="margin-bottom:14px">v2에서 후보로 올렸던 항목 중 <strong style="color:var(--ink)">이미 보유 중</strong>이라 추천에서 빠지는 것들입니다. 앞으로 추천 시 이 목록을 먼저 대조합니다.</p>
+  <table>
+    <thead><tr><th style="width:38%">v2 후보</th><th style="width:88px">현재</th><th>보유 항목</th></tr></thead>
+    <tbody>
+      <tr><td class="b">킬커란 8 CS 셰리</td><td><span class="verdict v-hold">보유</span></td><td>#23 — 버번 캐스크 버전(#24)까지 함께 보유</td></tr>
+      <tr><td class="b">벤로막 15</td><td><span class="verdict v-hold">보유</span></td><td>#31</td></tr>
+      <tr><td class="b">카덴헤드 단일캐스크</td><td><span class="verdict v-hold">보유</span></td><td>#72 Enigma Speyside 12 Oloroso</td></tr>
+      <tr><td class="b">로얄 브라클라 21년</td><td><span class="verdict v-hold">보유</span></td><td>#70 — 점수만 미기재</td></tr>
+      <tr><td class="b">탐두 18년</td><td><span class="verdict v-hold">보유</span></td><td>#68 — 점수만 미기재</td></tr>
+      <tr><td class="b">클라이넬리시 계열 왁시</td><td><span class="verdict v-hold">보유</span></td><td>#34 클라이넬리시 14 — 다만 이 1종뿐이라 고숙성·인디는 여전히 갭</td></tr>
+      <tr><td class="b">하이랜드파크 고숙성</td><td><span class="verdict v-hold">보유</span></td><td>#16 18 Travel · #17 Seoul #3 19 CS · #18 Heather CS</td></tr>
+      <tr><td class="b">헤이즐번 13 올로로소</td><td><span class="verdict v-buy">유효</span></td><td>미보유 — 갭 분석에서도 상위로 재확인</td></tr>
+      <tr><td class="b">르데이그 고숙성 셰리</td><td><span class="verdict v-buy">유효</span></td><td>미보유 — 토버모리 계열 자체가 셀러에 없음</td></tr>
+      <tr><td class="b">치치부</td><td><span class="verdict v-bar">유효</span></td><td>미보유 — 일본 10종 중 인디·크래프트 고숙성 부재</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2><span>17</span>아직 비어 있는 칸</h2>
+<div class="card">
+  <ul class="f">
+    <li><b>개봉 목록</b> — 절반가량 개봉. 받는 즉시 오프닝 큐와 소분 대상 목록을 만들 수 있음 <span style="font-size:12px;color:var(--ink3)">· 공유 예정</span></li>
+    <li><b>위시리스트</b> — 라프로익 25 CS · 글렌드로낙 30년 두 병 외에는 정해둔 것이 없고, <b style="color:var(--amber)">추천을 원하는 상태</b>. 다음 작업의 출발점</li>
+    <li><b>비선호 병의 점수</b> — 라프로익 10 CS · 롱로우 100 Proof · 킬호만 로크 곰. 하한이 생겨야 74~92 구간의 상대 비교가 정확해짐</li>
+    <li><b>탐두 18년 · 로얄 브라클라 21년</b> — 둘 다 보유 중이며 정성 평가만 있음. 셰리 축 상단이 여기서 확정</li>
+    <li><b>미채점 92종</b> — 특히 미국 24종 중 1병, 일본 10종 중 1병만 채점. “다시 마시면 기록하겠다”는 의사 확인됨</li>
+    <li><b>목록상 확인 필요 항목</b> — Springbank 12 CS 배치·도수, Macallan 18 2024 세부 라인명, Highland Park Heather CS 정확한 제품명</li>
+  </ul>
+</div>
+
+<footer>
+  위스키 취향 프로파일 v4 · 2026.07.26 · 본인 작성 프로필 + 셀러 118종 + 심층 인터뷰 반영<br>
+  추천 시 순서 — <strong style="color:var(--ink2)">16번 제외 목록 대조 → 11번 규칙과 제시 형식 → 10번 가격 규칙으로 결론</strong>.
+  새 시음 기록·개봉 목록을 주시면 05 · 13 · 15 · 17번을 갱신합니다.
+</footer>
+
+</div>
+
+<script>
+const DATA=[
+ {n:"SMWS 4.396 Heather Ember 25년",s:92,c:"독립병입 · 고숙성",m:"하이랜드파크. 개인 최고점"},
+ {n:"라프로익 25년 CS",s:91,c:"피트 · 고숙성",m:"메디시널 피트가 거칠지 않고 우아하게 정돈. 피트·숙성감·과실·오크 통합도 매우 뛰어남"},
+ {n:"글렌드로낙 CoC PX 1994 30년 RGKR",s:87,c:"셰리 · 고숙성",m:"PX인데 단맛 너머의 깊이와 입체감이 있음"},
+ {n:"이치로 몰트&그레인 싱글캐스크",s:84,c:"재패니즈",m:""},
+ {n:"글렌그란트 21년 (W&M 2003)",s:82,c:"버번캐스크",m:"꽃향·과하지 않은 단맛·견과 피니시는 좋았으나 단맛 이후 피니시까지 연결이 늘어지고 중간이 살짝 빔"},
+ {n:"탈리스커 18년",s:82,c:"피트",m:"해풍·후추·과실의 조화가 잘 맞음"},
+ {n:"스프링뱅크 로컬발리 10년",s:81,c:"캠벨타운",m:"저숙성이지만 원액의 힘과 밀도가 느껴짐"},
+ {n:"믹터스 보머거스 2025",s:81,c:"버번",m:"재시음에서 훨씬 좋아져 78 → 81 상향"},
+ {n:"스프링뱅크 10년 피노",s:80,c:"캠벨타운",m:""},
+ {n:"스프링뱅크 15년",s:80,c:"캠벨타운",m:""},
+ {n:"스프링뱅크 18년 2026",s:80,c:"캠벨타운",m:"단맛·피트·탄산감·알코올 통합은 좋았으나 개성이 기대보다 약함"},
+ {n:"아드벡 우거다일",s:80,c:"피트",m:""},
+ {n:"글렌알라키 15년",s:80,c:"셰리",m:""},
+ {n:"글렌고인 18년 신형",s:80,c:"셰리",m:""},
+ {n:"로얄 브라클라 12년",s:80,c:"셰리",m:"피니시는 짧지만 기분 좋은 너티함"},
+ {n:"맥캘란 15년 더블캐스크",s:80,c:"셰리",m:"안정적이고 완성도는 있으나 상대적으로 평면적"},
+ {n:"옥토모어 16.2",s:80,c:"피트",m:"최초에는 더 높게 평가했으나 재고 후 80으로 수정"},
+ {n:"글렌모렌지 18년 Extremely Rare",s:79,c:"버번캐스크",m:""},
+ {n:"모틀락 16년",s:79,c:"셰리",m:""},
+ {n:"기원 배치 7",s:79,c:"코리안",m:""},
+ {n:"부나하벤 12년",s:78,c:"셰리",m:""},
+ {n:"로얄 브라클라 18년",s:78,c:"셰리",m:"드라이함과 스파이스가 다소 취향에서 벗어남"},
+ {n:"맥캘란 클래식 컷 2024",s:77,c:"셰리",m:""},
+ {n:"레드브레스트 15년",s:75,c:"아이리시",m:""},
+ {n:"Hidden Spirits Burnside 36년",s:75,c:"고숙성 독립병입",m:"향은 좋았으나 알코올과 날 선 버번 캐스크가 먼저. 36년에 기대한 깊이·존재감 부족"},
+ {n:"기원 시그니처",s:74,c:"코리안",m:""},
+];
+const MIN=72,MAX=94,TICKS=[74,77,80,82,85,90],STRONG=[80,90];
+const pos=v=>((v-MIN)/(MAX-MIN))*100;
+
+const esc=t=>String(t).replace(/[&<>"]/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[x]));
+const gl=TICKS.map(t=>`<div class="gl${STRONG.includes(t)?" strong":""}" style="left:${pos(t)}%"></div>`).join("");
+
+document.getElementById("chart").innerHTML =
+  `<div class="scale"><div></div><div class="ticks">`+
+  TICKS.map(t=>`<span class="tick t${t}" style="left:${pos(t)}%">${t}</span>`).join("")+
+  `</div><div style="font-size:10.5px;color:var(--ink3);text-align:right">점</div></div>`+
+  DATA.map(d=>
+    `<div class="row"><div class="rname" title="${esc(d.n)}">${esc(d.n)}</div>`+
+    `<div class="track">${gl}<div class="dot" style="left:${pos(d.s)}%"></div></div>`+
+    `<div class="rval">${d.s}</div>`+
+    `<div class="tip"><b>${esc(d.n)}</b> · ${esc(d.c)} · ${d.s}점${d.m?"<br>"+esc(d.m):""}</div></div>`
+  ).join("");
+
+const CELLAR=[
+ {k:"하이랜드·스페이사이드 공식", v:40},
+ {k:"미국 버번 · 라이", v:24},
+ {k:"아일라 · 아일랜드 피트", v:22},
+ {k:"일본", v:10},
+ {k:"캠벨타운", v:7},
+ {k:"독립병입 · 한정", v:4},
+ {k:"한국 · 한일 협업", v:4},
+ {k:"대만", v:3},
+ {k:"블렌디드 스카치", v:3},
+ {k:"로우랜드", v:1},
+];
+const BMAX=40;
+document.getElementById("cellar").innerHTML =
+  `<div class="bax"><div></div><div class="baxin">`+
+  [0,10,20,30,40].map(t=>`<span class="tick" style="left:${(t/BMAX)*100}%">${t}</span>`).join("")+
+  `</div><div style="font-size:10.5px;color:var(--ink3);text-align:right">종</div></div>`+
+  CELLAR.map(d=>
+    `<div class="brow"><div class="bname">${esc(d.k)}</div>`+
+    `<div class="btrack"><div class="bfill" style="width:${(d.v/BMAX)*100}%"></div></div>`+
+    `<div class="bval">${d.v}</div></div>`).join("");
+
+document.getElementById("tbody").innerHTML = DATA.map(d=>
+  `<tr><td class="b">${esc(d.n)}</td><td style="font-size:12.5px">${esc(d.c)}</td>`+
+  `<td class="num">${d.s}</td><td style="font-size:12.5px">${esc(d.m)||"—"}</td></tr>`).join("");
+</script>
+</body>
+</html>
