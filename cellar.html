@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>위스키 보유 재고 — 하하호호</title>
+<meta name="description" content="보유 위스키 119종 120병 — 취향 축·지역별 재고 목록">
+<meta name="theme-color" content="#14100c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314100c'/%3E%3Cpath d='M10 7h12l-1.6 8.5a4.6 4.6 0 0 1-9 0z' fill='%23c08430'/%3E%3Crect x='14.6' y='19' width='2.8' height='5' fill='%23c08430'/%3E%3Crect x='11' y='23.5' width='10' height='2.2' rx='1.1' fill='%23c08430'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#14100c; --panel:#1d1813; --panel2:#241e17; --line:#3a3128;
+    --ink:#f0e8dc; --ink2:#b6a894; --ink3:#91846d;
+    --amber:#d99b3f; --mark:#c08430; --amber-soft:#8a6528;
+    --good:#7fa66a; --bad:#c98a7a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:44px 20px 90px}
+
+  .nav{display:flex;gap:8px;margin-bottom:18px}
+  .nav a{font-size:12.5px;padding:6px 13px;border-radius:20px;border:1px solid var(--line);
+    color:var(--ink2);text-decoration:none}
+  .nav a[aria-current=page]{border-color:var(--amber);color:var(--amber)}
+  .nav a:hover{color:var(--ink)}
+  header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:22px}
+  .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin:0 0 10px}
+  h1{font-size:27px;margin:0 0 10px;font-weight:650;letter-spacing:-.01em}
+  .meta{font-size:13px;color:var(--ink3);margin:0}
+  .meta a{color:var(--amber);text-decoration:none;border-bottom:1px solid var(--amber-soft)}
+
+  /* stat row */
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0}
+  @media(max-width:640px){.kpi{grid-template-columns:repeat(2,1fr)}}
+  .kpi div{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:14px 16px}
+  .kpi .l{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);margin:0 0 4px}
+  .kpi .v{font-size:24px;font-weight:640;color:var(--amber);margin:0;line-height:1.2}
+  .kpi .s{font-size:12px;color:var(--ink3);margin:2px 0 0}
+
+  /* controls */
+  .bar{position:sticky;top:0;z-index:20;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+  .row1{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  input[type=search]{flex:1;min-width:190px;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    color:var(--ink);padding:9px 13px;font-size:14px;font-family:inherit;outline:none}
+  input[type=search]:focus{border-color:var(--amber-soft)}
+  input[type=search]::placeholder{color:var(--ink3)}
+  .seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{background:none;border:none;color:var(--ink3);font-family:inherit;font-size:13px;padding:9px 14px;cursor:pointer}
+  .seg button[aria-pressed=true]{background:var(--amber-soft);color:#1a1409;font-weight:600}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .chips button{background:var(--panel);border:1px solid var(--line);border-radius:20px;color:var(--ink2);
+    font-family:inherit;font-size:12px;padding:5px 12px;cursor:pointer}
+  .chips button[aria-pressed=true]{border-color:var(--amber);color:var(--amber)}
+  .count{font-size:12.5px;color:var(--ink3);padding:10px 2px 4px}
+
+  /* groups */
+  .grp{margin-top:22px}
+  .ghead{display:flex;align-items:baseline;gap:10px;padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:2px}
+  .gname{font-size:13px;letter-spacing:.06em;color:var(--amber);font-weight:640}
+  .gcount{font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
+  .gbar{flex:1;height:4px;background:#2c251d;border-radius:3px;overflow:hidden;margin-left:6px;max-width:180px}
+  .gbar i{display:block;height:100%;background:var(--mark);border-radius:0 3px 3px 0}
+
+  .it{display:flex;align-items:baseline;gap:10px;padding:9px 4px;border-bottom:1px solid #2a231c}
+  .it:last-child{border-bottom:none}
+  .it:hover{background:var(--panel2);border-radius:5px}
+  .nm{flex:1;font-size:14px;color:var(--ink2)}
+  .it:hover .nm{color:var(--ink)}
+  .nm em{font-style:normal;color:var(--ink3);font-size:12.5px}
+  .sc{font-size:12.5px;font-variant-numeric:tabular-nums;font-weight:640;color:var(--amber);min-width:24px;text-align:right}
+  .sc.none{color:#4d443a;font-weight:400}
+  .tag{font-size:10.5px;padding:2px 7px;border-radius:4px;white-space:nowrap}
+  .t-bad{background:rgba(201,138,122,.15);color:var(--bad)}
+  .t-chk{background:rgba(217,155,63,.13);color:var(--amber)}
+  .t-top{background:rgba(127,166,106,.16);color:#96bd80}
+  .t-x2{background:#2c251d;color:var(--ink2)}
+  .empty{padding:40px;text-align:center;color:var(--ink3);font-size:14px}
+
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="nav"><a href="./">취향 프로파일</a><a href="cellar.html" aria-current="page">보유 재고 119종</a></nav>
+
+<header>
+  <p class="eyebrow">Cellar Inventory</p>
+  <h1>보유 위스키 119종 · 120병</h1>
+  <p class="meta">2026년 7월 26일 기준 · 취향 프로파일 v4.1과 연동 · Glenturret 15 2024만 2병 · 최근 추가: W&amp;M 링크우드 18년</p>
+</header>
+
+<div class="kpi">
+  <div><p class="l">보유 + 채점</p><p class="v" id="k1">—</p><p class="s" id="k1s"></p></div>
+  <div><p class="l">미채점</p><p class="v" id="k2">—</p><p class="s">점수 기록 없음</p></div>
+  <div><p class="l">최고점</p><p class="v">92</p><p class="s">SMWS 4.396 25yo</p></div>
+  <div><p class="l">보유 채점분 평균</p><p class="v" id="k4">—</p><p class="s" id="k4s"></p></div>
+</div>
+
+<p class="meta" style="margin:-8px 0 16px;font-size:12.5px">
+  점수 기록 28병 중 <strong style="color:var(--ink2)">12병은 셀러에 없습니다</strong> — 다 마셨거나 바에서 시음한 것.
+  라프로익 25 CS(91) · 글렌드로낙 PX 30(87) · 스프링뱅크 로컬발리 10(81) · 스프링뱅크 10 피노(80) · 스프링뱅크 18 2026(80) ·
+  모틀락 16(79) · 부나하벤 12(78) · 로얄 브라클라 18(78) · 맥캘란 클래식 컷 2024(77) · 레드브레스트 15(75) · Hidden Spirits Burnside 36(75) · W&amp;M 링크우드 16 PX(80)
+</p>
+
+<div class="bar">
+  <div class="row1">
+    <input type="search" id="q" placeholder="증류소 · 제품명 검색 (예: 스프링뱅크, laphroaig, 셰리)" autocomplete="off">
+    <div class="seg" role="group">
+      <button id="vAxis" aria-pressed="true">취향 축</button>
+      <button id="vRegion" aria-pressed="false">지역</button>
+    </div>
+  </div>
+  <div class="chips">
+    <button data-f="scored" aria-pressed="false">채점된 것만</button>
+    <button data-f="unscored" aria-pressed="false">미채점만</button>
+    <button data-f="top" aria-pressed="false">82점 이상</button>
+    <button data-f="bad" aria-pressed="false">비선호</button>
+    <button data-f="chk" aria-pressed="false">확인 필요</button>
+  </div>
+  <div class="count" id="count"></div>
+</div>
+
+<div id="list"></div>
+
+<footer>
+  위스키 보유 재고 · 2026.07.26 · 개봉 상태는 아직 미반영 (약 절반 개봉, 목록 공유 예정)<br>
+  <span style="color:var(--ink2)">비선호</span> = 본인이 명시적으로 안 맞는다고 기록 · <span style="color:var(--ink2)">확인 필요</span> = 배치·라인명·도수 미확정
+</footer>
+
+</div>
+
+<script>
+// axis: IB 독립병입 / PEATH 고숙성 피트 / PEAT 피트 / CAMP 캠벨타운 / SHERRY 셰리·하이랜드 공식
+//       CASK 버번캐스크·논피트 공식 / WAXY 왁시 / BLEND 블렌디드 / JP KR TW BOURBON RYE
+const AX = {
+  IB:"독립병입 · 한정", PEATH:"고숙성 피트 (18년+)", PEAT:"피트", CAMP:"캠벨타운",
+  SHERRY:"셰리 · 하이랜드/스페이사이드 공식", CASK:"버번캐스크 · 논피트 공식", WAXY:"왁시",
+  BLEND:"블렌디드 스카치", JP:"일본", KR:"한국 · 한일 협업", TW:"대만", BOURBON:"버번 · 테네시", RYE:"라이"
+};
+const AXORDER = ["IB","PEATH","PEAT","CAMP","WAXY","SHERRY","CASK","BLEND","JP","KR","TW","BOURBON","RYE"];
+const RGORDER = ["아일라 · 아일랜드 · 피트","캠벨타운","로우랜드","하이랜드 · 스페이사이드 공식","독립병입 · 한정","블렌디드 스카치","일본","한국 · 한일 협업","대만","버번 · 테네시","라이"];
+
+const D=[
+ // name, sub(부가정보), axis, region, score(null=미채점), flag('bad'|'chk'|null), qty
+ ["Laphroaig PX Cask","1L","PEAT","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Laphroaig 10 Year Old Cask Strength Batch 15","56.5% · 거친 메디시널과 알코올","PEAT","아일라 · 아일랜드 · 피트",null,"bad",1],
+ ["Laphroaig 14 Year Old Willem Dafoe Limited Edition","","PEAT","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Ardbeg Uigeadail","","PEAT","아일라 · 아일랜드 · 피트",80,null,1],
+ ["Ardbeg Smoketrails Smokiverse","","PEAT","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Ardbeg Dolce","","PEAT","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Ardbeg Traigh Bhan 19 Year Old Batch 7","","PEATH","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Lagavulin Distillers Edition","","PEAT","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Talisker 10 Year Old","","PEAT","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Talisker 18 Year Old","해풍·후추·과실의 조화","PEATH","아일라 · 아일랜드 · 피트",82,null,1],
+ ["Caol Ila Distillers Edition","","PEAT","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Caol Ila 2003 Gordon & MacPhail","독립병입","IB","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Silver Seal Caol Ila 2009 15 Year Old","52.8% · Cask #2101024 · Italian Wildlife","IB","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Bowmore 18 Year Old","","PEATH","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Bruichladdich 18 Year Old","논피트","CASK","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Highland Park 18 Year Old Travel Edition","","PEATH","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Highland Park Seoul Edition #3 19 Year Old Cask Strength","고숙성 HP · CS","PEATH","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Highland Park Heather Cask Strength","정확한 영문 제품명 확인 필요","PEAT","아일라 · 아일랜드 · 피트",null,"chk",1],
+ ["Glenturret 14 Year Old Peat Smoked 2025","","PEAT","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Octomore 14.3","저숙성 고도수 피트","PEAT","아일라 · 아일랜드 · 피트",null,null,1],
+ ["Octomore 16.2","첫인상 대비 재고 후 하향","PEAT","아일라 · 아일랜드 · 피트",80,null,1],
+ ["SMWS 4.396 Heather Ember 25 Year Old","49.5% · Highland Park · 개인 최고점","IB","아일라 · 아일랜드 · 피트",92,null,1],
+
+ ["Kilkerran 8 Year Old Cask Strength Sherry Cask","","CAMP","캠벨타운",null,null,1],
+ ["Kilkerran 8 Year Old Cask Strength Bourbon Cask","","CAMP","캠벨타운",null,null,1],
+ ["Kilkerran Heavily Peated Cask Strength Batch 13","","CAMP","캠벨타운",null,null,1],
+ ["Kilkerran 16 Year Old 2025 Release","","CAMP","캠벨타운",null,null,1],
+ ["Springbank 5 Year Old 100 Proof","롱로우 100 Proof보다 나았음","CAMP","캠벨타운",null,null,1],
+ ["Springbank 12 Year Old Cask Strength","배치와 도수 확인 필요","CAMP","캠벨타운",null,"chk",1],
+ ["Springbank 15 Year Old","","CAMP","캠벨타운",80,null,1],
+
+ ["Lochlea Cask Strength Batch 3","","CASK","로우랜드",null,null,1],
+
+ ["Benromach 15 Year Old","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Aultmore 12 Year Old Sherry Finish","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Balvenie 12 Year Old Single Barrel","","CASK","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Clynelish 14 Year Old","왁시 축의 유일한 병","WAXY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Dalmore Cigar Malt Reserve","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Dalmore King Alexander III","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Dalmore Luminary No.3 17 Year Old","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Edradour 12 Year Old Cask Strength","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Edradour 10 Year Old Sauvignon Cask","와인 캐스크","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["GlenAllachie 11 Year Old","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["GlenAllachie 15 Year Old","","SHERRY","하이랜드 · 스페이사이드 공식",80,null,1],
+ ["GlenAllachie 18 Year Old","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["GlenAllachie 2012 Cuvée Cask Finish","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["GlenAllachie 2006 18 Year Old PX Hogshead","Whisky Cognac Club 18주년","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["GlenAllachie 2005 18 Year Old PX Puncheon","Billy Walker in Seoul","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glendronach 15 Year Old Revival","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glendronach 21 Year Old Parliament 구형","신형과 직접 비교 가능한 페어","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glendronach 21 Year Old Parliament 신형","구형과 직접 비교 가능한 페어","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glendronach Ode to the Dark","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glenfiddich 18 Year Old","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glenfiddich 21 Year Old","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glen Garioch 15 Year Old","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glen Grant 15 Year Old","공식병입","CASK","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glenburgie 18 Year Old","","CASK","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Ballantine’s Glenburgie 16 Year Old Small Batch 2","","CASK","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glengoyne 10 Year Old Cask Strength","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glengoyne Legacy Series Chapter Three","","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glengoyne 18 Year Old","신형","SHERRY","하이랜드 · 스페이사이드 공식",80,null,1],
+ ["Glengoyne 25 Year Old","보유 중 25년 이상 2종 중 하나","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glenmorangie 18 Year Old Extremely Rare","","CASK","하이랜드 · 스페이사이드 공식",79,null,1],
+ ["Glenmorangie × Harrison Ford Limited Edition","","CASK","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glenturret 12 Year Old 2023 Release","","CASK","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Glenturret 15 Year Old 2024 Release","2병 보유","CASK","하이랜드 · 스페이사이드 공식",null,null,2],
+ ["Macallan 12 Year Old 110 Proof 2025","물 2–3방울로 밸런스 개선","SHERRY","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Macallan 15 Year Old Double Cask 2024","완성도는 있으나 평면적","SHERRY","하이랜드 · 스페이사이드 공식",80,null,1],
+ ["Macallan 18 Year Old 2024","세부 라인명 확인 필요","SHERRY","하이랜드 · 스페이사이드 공식",null,"chk",1],
+ ["Michel Couvreur Old Aged","","IB","하이랜드 · 스페이사이드 공식",null,null,1],
+ ["Tamdhu 18 Year Old","맥캘란 15 DC보다 좋음 · 점수 미기재","SHERRY","하이랜드 · 스페이사이드 공식",null,"chk",1],
+ ["Royal Brackla 12 Year Old","짧지만 기분 좋은 너티함","SHERRY","하이랜드 · 스페이사이드 공식",80,null,1],
+ ["Royal Brackla 21 Year Old","12·18년보다 최상으로 지목 · 점수 미기재","SHERRY","하이랜드 · 스페이사이드 공식",null,"chk",1],
+
+ ["Wilson & Morgan Glen Grant 21 Year Old","2003 · 독립병입 고숙성","IB","독립병입 · 한정",82,null,1],
+ ["Cadenhead’s Enigma Speyside 12 Year Old SPY.4.A","50% · Oloroso Hogsheads · 2013–2026","IB","독립병입 · 한정",null,null,1],
+ ["Club Qing Monochrome Essence 12 Year Old","46.5% · Highland Distilleries · 2nd Fill PX Quarter Cask","IB","독립병입 · 한정",null,null,1],
+ ["Wilson & Morgan Linkwood 18 Year Old","2007–2025 · 56.6% · Cask #804120 · No.034/229 · 리필 호그스헤드 + 1st fill 올로로소 5년 피니시 · 2026.07 구매 ₩300,000 · 개봉 · 잠정 점수, 2~3주 뒤 확정","IB","독립병입 · 한정",81,"chk",1],
+ ["Glasgow 1770 6 Year Old Korea Edition","","CASK","독립병입 · 한정",null,null,1],
+
+ ["Johnnie Walker Green Label","","BLEND","블렌디드 스카치",null,null,1],
+ ["Johnnie Walker Blue Label 구형","43%","BLEND","블렌디드 스카치",null,null,1],
+ ["Royal Salute 21 Year Old","","BLEND","블렌디드 스카치",null,null,1],
+
+ ["Yamazaki 12 Year Old","","JP","일본",null,null,1],
+ ["Hakushu 12 Year Old","","JP","일본",null,null,1],
+ ["Nikka From the Barrel","","JP","일본",null,null,1],
+ ["Nikka Taketsuru","","JP","일본",null,null,1],
+ ["Nikka Yoichi 10 Year Old","","JP","일본",null,null,1],
+ ["Nikka Miyagikyo 10 Year Old","","JP","일본",null,null,1],
+ ["Ichiro’s Malt & Grain Single Cask","단일캐스크","JP","일본",84,null,1],
+ ["Chiyomusubi Rintaro Heavy Char 3 Year Old","","JP","일본",null,null,1],
+ ["Genshu Yakusugi","","JP","일본",null,null,1],
+ ["RYUKA Single Malt 2025","","JP","일본",null,null,1],
+
+ ["KIWON Batch 7 Cask Strength","기원","KR","한국 · 한일 협업",79,null,1],
+ ["KIWON Signature","기원","KR","한국 · 한일 협업",74,null,1],
+ ["병영성의 기억 Port Cask No.1","500ml · 61.2%","KR","한국 · 한일 협업",null,null,1],
+ ["Craftbros JEGI Saburomaru","크래프트브로스 × 사부로마루","KR","한국 · 한일 협업",null,null,1],
+
+ ["Kavalan Solist Vinho Barrique","","TW","대만",null,null,1],
+ ["Kavalan Solist PX Sherry Cask","","TW","대만",null,null,1],
+ ["Kavalan Solist Port Cask Strength","","TW","대만",null,null,1],
+
+ ["Wild Turkey Rare Breed","","BOURBON","버번 · 테네시",null,null,1],
+ ["Wild Turkey 12 Year Old","","BOURBON","버번 · 테네시",null,null,1],
+ ["Michter’s US★1 Bourbon","","BOURBON","버번 · 테네시",null,null,1],
+ ["Michter’s Bomberger’s Declaration 2025","재시음으로 78 → 81 상향","BOURBON","버번 · 테네시",81,null,1],
+ ["Jack Daniel’s Single Barrel Barrel Strength","바나나 향이 분명해 호감","BOURBON","버번 · 테네시",null,null,1],
+ ["Blanton’s Single Barrel","","BOURBON","버번 · 테네시",null,null,1],
+ ["Blanton’s Gold Edition","","BOURBON","버번 · 테네시",null,null,1],
+ ["Woodford Reserve","","BOURBON","버번 · 테네시",null,null,1],
+ ["Woodford Reserve Master’s Collection Sweet Oak Bourbon","","BOURBON","버번 · 테네시",null,null,1],
+ ["Maker’s Mark Cask Strength 2025","콜라와 섞었을 때 특히 좋았음","BOURBON","버번 · 테네시",null,null,1],
+ ["Four Roses Small Batch Select","","BOURBON","버번 · 테네시",null,null,1],
+ ["Booker’s","3종 비교 중 1위","BOURBON","버번 · 테네시",null,null,1],
+ ["Rowan’s Creek","","BOURBON","버번 · 테네시",null,null,1],
+ ["Weller 12 Year Old","","BOURBON","버번 · 테네시",null,null,1],
+ ["Noah’s Mill","","BOURBON","버번 · 테네시",null,null,1],
+ ["Elijah Craig Barrel Proof Batch A123","","BOURBON","버번 · 테네시",null,null,1],
+ ["Russell’s Reserve 13 Year Old 2025 Release","","BOURBON","버번 · 테네시",null,null,1],
+ ["George T. Stagg 2025 Release","","BOURBON","버번 · 테네시",null,null,1],
+
+ ["Russell’s Reserve Single Barrel Rye","","RYE","라이",null,null,1],
+ ["Willett Family Estate Rye","허브·독특한 캐릭터 선호","RYE","라이",null,null,1],
+ ["High West A Midwinter Night’s Dram Act 11 Scene 10","","RYE","라이",null,null,1],
+ ["Woodford Reserve Barrel Strength Rye","","RYE","라이",null,null,1],
+ ["Michter’s Barrel Strength Rye","","RYE","라이",null,null,1],
+ ["Willett Family Estate Single Barrel Rye 11 Year Old","67.1%","RYE","라이",null,null,1],
+];
+
+const KO = {
+ "Laphroaig":"라프로익","Ardbeg":"아드벡 아드베그","Lagavulin":"라가불린","Talisker":"탈리스커",
+ "Caol Ila":"카올일라 쿨일라 카올아일라","Bowmore":"보모어","Bruichladdich":"브룩라디","Highland Park":"하이랜드파크",
+ "Glenturret":"글렌터렛","Octomore":"옥토모어","SMWS":"에스엠더블유에스 하이랜드파크",
+ "Kilkerran":"킬커란","Springbank":"스프링뱅크","Lochlea":"로클리","Benromach":"벤로막",
+ "Aultmore":"올트모어","Balvenie":"발베니","Clynelish":"클라이넬리쉬 크라이넬리쉬 클라이넬리시",
+ "Dalmore":"달모어","Edradour":"에드라두어","GlenAllachie":"글렌알라키","Glendronach":"글렌드로낙",
+ "Glenfiddich":"글렌피딕","Glen Garioch":"글렌기리","Glen Grant":"글렌그란트","Glenburgie":"글렌버기",
+ "Ballantine":"발렌타인","Glengoyne":"글렌고인","Glenmorangie":"글렌모렌지","Macallan":"맥캘란",
+ "Michel Couvreur":"미셸쿠브리에","Tamdhu":"탐두","Royal Brackla":"로얄브라클라",
+ "Wilson & Morgan":"윌슨앤모건","Cadenhead":"카덴헤드","Club Qing":"클럽칭","Glasgow":"글래스고",
+ "Johnnie Walker":"조니워커","Royal Salute":"로얄살루트","Yamazaki":"야마자키","Hakushu":"하쿠슈",
+ "Nikka":"닛카","Yoichi":"요이치","Miyagikyo":"미야기쿄","Taketsuru":"타케츠루",
+ "Ichiro":"이치로","Chiyomusubi":"치요무스비","Genshu":"겐슈 야쿠스기","RYUKA":"류카",
+ "KIWON":"기원","Craftbros":"크래프트브로스 사부로마루","Kavalan":"카발란",
+ "Wild Turkey":"와일드터키","Michter":"믹터스","Jack Daniel":"잭다니엘","Blanton":"블랜튼",
+ "Woodford":"우드포드","Maker":"메이커스마크","Four Roses":"포로지스","Booker":"부커스",
+ "Rowan":"로완스크릭","Weller":"웰러","Noah":"노아스밀","Elijah Craig":"에라이저크레이그 엘리자크레이그",
+ "Russell":"러셀리저브","George T. Stagg":"조지티스택","Willett":"윌렛","High West":"하이웨스트",
+ "Silver Seal":"실버씰","Gordon & MacPhail":"고든앤맥페일","Uigeadail":"우거다일","Traigh Bhan":"트라이반",
+ "Distillers Edition":"디스틸러스에디션","Cask Strength":"캐스크스트렝스","Sherry":"셰리","Oloroso":"올로로소",
+ "Peat":"피트","Single Barrel":"싱글배럴","Rye":"라이","Bourbon":"버번"
+};
+function koFor(name){ let out=""; for(const k in KO){ if(name.includes(k)) out += " "+KO[k]; } return out; }
+const esc=t=>String(t).replace(/[&<>"]/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[x]));
+let view="axis", filters=new Set(), q="";
+
+const scored = D.filter(d=>d[4]!=null);
+document.getElementById("k1").textContent = scored.length;
+document.getElementById("k1s").textContent = Math.round(scored.length/D.length*100)+"% of 118종";
+document.getElementById("k2").textContent = D.length-scored.length;
+document.getElementById("k4").textContent = (scored.reduce((a,d)=>a+d[4],0)/scored.length).toFixed(1);
+document.getElementById("k4s").textContent = scored.length+"병 기준";
+
+function pass(d){
+  if(q){
+    const hay=(d[0]+" "+d[1]+" "+d[3]+" "+AX[d[2]]+koFor(d[0])).toLowerCase();
+    if(!hay.includes(q)) return false;
+  }
+  if(filters.has("scored") && d[4]==null) return false;
+  if(filters.has("unscored") && d[4]!=null) return false;
+  if(filters.has("top") && !(d[4]!=null && d[4]>=82)) return false;
+  if(filters.has("bad") && d[5]!=="bad") return false;
+  if(filters.has("chk") && d[5]!=="chk") return false;
+  return true;
+}
+
+function render(){
+  const rows = D.filter(pass);
+  const idx = view==="axis" ? 2 : 3;
+  const order = view==="axis" ? AXORDER : RGORDER;
+  const label = v => view==="axis" ? (AX[v]||v) : v;
+
+  const groups = {};
+  rows.forEach(d=>{ (groups[d[idx]] ||= []).push(d); });
+  const maxN = Math.max(1, ...Object.values(groups).map(g=>g.reduce((a,d)=>a+d[6],0)));
+
+  const bottles = rows.reduce((a,d)=>a+d[6],0);
+  document.getElementById("count").textContent =
+    `${rows.length}종 · ${bottles}병 표시중` + (rows.length<D.length ? ` (전체 ${D.length}종)` : "");
+
+  const html = order.filter(k=>groups[k]).map(k=>{
+    const g = groups[k];
+    const n = g.reduce((a,d)=>a+d[6],0);
+    return `<section class="grp"><div class="ghead">
+      <span class="gname">${esc(label(k))}</span>
+      <span class="gcount">${n}병</span>
+      <span class="gbar"><i style="width:${(n/maxN)*100}%"></i></span>
+    </div>` + g.map(d=>{
+      const tags = [];
+      if(d[4]===92) tags.push('<span class="tag t-top">최고점</span>');
+      if(d[5]==="bad") tags.push('<span class="tag t-bad">비선호</span>');
+      if(d[5]==="chk") tags.push('<span class="tag t-chk">확인 필요</span>');
+      if(d[6]>1) tags.push(`<span class="tag t-x2">×${d[6]}</span>`);
+      return `<div class="it"><span class="nm">${esc(d[0])}${d[1]?` <em>· ${esc(d[1])}</em>`:""}</span>`+
+        tags.join("")+
+        `<span class="sc${d[4]==null?" none":""}">${d[4]==null?"—":d[4]}</span></div>`;
+    }).join("") + `</section>`;
+  }).join("");
+
+  document.getElementById("list").innerHTML = html || '<p class="empty">조건에 맞는 병이 없습니다.</p>';
+}
+
+document.getElementById("q").addEventListener("input", e=>{ q=e.target.value.trim().toLowerCase(); render(); });
+document.getElementById("vAxis").addEventListener("click", ()=>{ view="axis";
+  document.getElementById("vAxis").setAttribute("aria-pressed","true");
+  document.getElementById("vRegion").setAttribute("aria-pressed","false"); render(); });
+document.getElementById("vRegion").addEventListener("click", ()=>{ view="region";
+  document.getElementById("vRegion").setAttribute("aria-pressed","true");
+  document.getElementById("vAxis").setAttribute("aria-pressed","false"); render(); });
+document.querySelectorAll(".chips button").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    const f=b.dataset.f;
+    if(filters.has(f)){ filters.delete(f); b.setAttribute("aria-pressed","false"); }
+    else{
+      if(f==="scored") { filters.delete("unscored"); document.querySelector('[data-f=unscored]').setAttribute("aria-pressed","false"); }
+      if(f==="unscored"){ filters.delete("scored"); filters.delete("top");
+        document.querySelector('[data-f=scored]').setAttribute("aria-pressed","false");
+        document.querySelector('[data-f=top]').setAttribute("aria-pressed","false"); }
+      if(f==="top") { filters.delete("unscored"); document.querySelector('[data-f=unscored]').setAttribute("aria-pressed","false"); }
+      filters.add(f); b.setAttribute("aria-pressed","true");
+    }
+    render();
+  });
+});
+render();
+</script>
+</body>
+</html>
